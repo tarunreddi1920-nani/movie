@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MovieTicket</title>
+<style>
+:root{--bg:#0f1115;--card:#1a1d24;--text:#f2f3f5;--muted:#9aa0ab;--accent:#e5384f;--line:#2a2e38}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;background:#14171d;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{font-weight:800;font-size:20px;color:var(--accent)}
+nav{display:flex;gap:6px}
+nav button,.ghost{background:none;border:1px solid transparent;color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+nav button.active{background:var(--accent)}
+.ghost{border-color:var(--line)}
+.right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{background:var(--card);border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:13px;cursor:pointer}
+.hidden{display:none!important}
+main{max-width:1100px;margin:0 auto;padding:20px}
+.notice{background:#3b2a12;color:#ffd9a0;padding:10px 20px;font-size:14px}
+.muted{color:var(--muted)}
+.err{color:#ff6b6b;min-height:18px;font-size:14px}
+.bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+input,select,textarea{background:#12151a;border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:8px;font-size:15px;width:100%;max-width:360px;font-family:inherit}
+textarea{max-width:100%;min-height:70px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-top:16px}
+.card{background:var(--card);border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--line);transition:transform .15s}
+.card:hover{transform:translateY(-4px)}
+.card img,.noimg{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:#222}
+.noimg{display:flex;align-items:center;justify-content:center;font-size:40px}
+.cinfo{padding:10px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+button.primary{background:var(--accent);color:#fff;border:0;padding:12px 18px;border-radius:8px;font-size:15px;cursor:pointer;margin-top:12px}
+button.primary:disabled{opacity:.5;cursor:not-allowed}
+.login{max-width:380px;margin:40px auto;background:var(--card);padding:28px;border-radius:14px;border:1px solid var(--line)}
+.login input{max-width:100%}
+.row{display:flex;gap:8px;align-items:center}
+.prefix{background:#12151a;border:1px solid var(--line);padding:10px 12px;border-radius:8px}
+.demo{background:#12301f;color:#a6f0c6;padding:10px;border-radius:8px;font-size:13px;margin-bottom:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:24px;z-index:20}
+.modal-box{background:var(--card);border-radius:14px;max-width:820px;width:100%;padding:24px;position:relative;border:1px solid var(--line)}
+.x{position:absolute;right:12px;top:10px;background:none;border:0;color:var(--text);font-size:20px;cursor:pointer}
+.detail{display:flex;gap:18px;flex-wrap:wrap}
+.detail img{width:180px;border-radius:10px;align-self:flex-start}
+.detail .txt{flex:1;min-width:240px}
+iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;margin-top:8px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.opt,.chipb{background:#12151a;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;text-align:left;cursor:pointer;font-size:14px}
+.opt.sel,.chipb.sel{border-color:var(--accent);background:#2a1519}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.screen{text-align:center;color:var(--muted);border-top:4px solid var(--accent);margin:14px auto;padding-top:4px;width:70%;font-size:12px}
+.seats{display:grid;gap:6px;justify-content:center}
+.srow{display:flex;gap:6px;align-items:center;justify-content:center}
+.rl{width:18px;color:var(--muted);font-size:12px}
+.seat{width:30px;height:30px;border-radius:6px;border:1px solid #3a7;background:#12301f;color:#cfe;font-size:11px;cursor:pointer;padding:0}
+.seat.booked{background:#333;border-color:#444;color:#666;cursor:not-allowed}
+.seat.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.legend{display:flex;gap:14px;justify-content:center;font-size:12px;color:var(--muted);margin:10px 0;flex-wrap:wrap}
+.ticket{border:2px dashed var(--accent);border-radius:12px;padding:18px;margin-top:12px;line-height:1.7}
+.list .item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.rev{border-top:1px solid var(--line);padding:10px 0;font-size:14px}
+h2,h3,h4{margin:14px 0 8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🎬 MovieTicket</div>
+  <nav id="nav" class="hidden">
+    <button data-tab="movies">Movies</button>
+    <button data-tab="theatres">Theatres</button>
+    <button data-tab="bookings">My Bookings</button>
+  </nav>
+  <div class="right">
+    <span id="locChip" class="chip">📍 Use my location</span>
+    <span id="userChip" class="chip hidden"></span>
+    <button id="logoutBtn" class="ghost hidden">Logout</button>
+  </div>
+</header>
+<div id="notice" class="notice hidden"></div>
+<main id="app"></main>
+<div id="modal" class="modal hidden"><div class="modal-box" id="modalBox"></div></div>
+
+<script src="config.js"></script>
+<script>
+const CFG = window.CONFIG || {};
+const KEY = CFG.TMDB_API_KEY || "";
+const REGION = CFG.REGION || "IN";
+const HAS_KEY = !!KEY && !KEY.startsWith("PASTE");
+const API = "https://api.themoviedb.org/3";
+const IMG = "https://image.tmdb.org/t/p/";
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+// Sample theatres (fictional names). Replace or add your own: name, city, lat, lng, rating.
+const THEATRES = [
+  {id:1, name:"Sample Cinemas Vijayawada", city:"Vijayawada", lat:16.5062, lng:80.6480, rating:4.3},
+  {id:2, name:"Sample Multiplex Guntur", city:"Guntur", lat:16.3067, lng:80.4365, rating:4.1},
+  {id:3, name:"Sample Screens Hyderabad Hitech", city:"Hyderabad", lat:17.4435, lng:78.3772, rating:4.5},
+  {id:4, name:"Sample Cinemas Chennai", city:"Chennai", lat:13.0827, lng:80.2707, rating:4.2},
+  {id:5, name:"Sample Multiplex Bengaluru", city:"Bengaluru", lat:12.9716, lng:77.5946, rating:4.4},
+  {id:6, name:"Sample Screens Mumbai", city:"Mumbai", lat:19.1197, lng:72.8468, rating:4.0},
+  {id:7, name:"Sample Cinemas Delhi", city:"Delhi", lat:28.6315, lng:77.2167, rating:4.2}
+];
+THEATRES.forEach(t => t.id = String(t.id));   // sample theatres are only a fallback if the real search fails
+const SHOWTIMES = ["10:00 AM", "01:15 PM", "04:30 PM", "07:45 PM", "10:30 PM"];
+const ROWS = "ABCDEFGH".split("");
+const COLS = 10;
+const PRICE = {A:150, B:150, C:150, D:200, E:200, F:200, G:300, H:300};
+
+const SAMPLE_MOVIES = [
+  {id:-1, title:"Sample Movie One", overview:"A sample movie shown because no TMDB key is set.", vote_average:8.1, release_date:"2026-01-01", poster_path:null},
+  {id:-2, title:"Sample Movie Two", overview:"A sample movie shown because no TMDB key is set.", vote_average:7.4, release_date:"2026-02-01", poster_path:null},
+  {id:-3, title:"Sample Movie Three", overview:"A sample movie shown because no TMDB key is set.", vote_average:6.9, release_date:"2026-03-01", poster_path:null},
+  {id:-4, title:"Sample Movie Four", overview:"A sample movie shown because no TMDB key is set.", vote_average:8.8, release_date:"2026-04-01", poster_path:null}
+];
+
+const state = { tab: "movies", user: store.get("mtb_user", null), loc: null, movies: [], nowShowing: [], query: "", b: null,
+  realTheatres: [], theatreStatus: "idle" };   // theatreStatus: idle | loading | ok | empty | error
+
+function notice(msg) { const n = $("#notice"); n.textContent = msg; n.classList.remove("hidden"); }
+
+async function tmdb(path, params) {
+  const q = new URLSearchParams(Object.assign({ api_key: KEY, language: "en-US" }, params || {}));
+  const r = await fetch(API + path + "?" + q.toString());
+  if (!r.ok) throw new Error("TMDB error " + r.status);
+  return r.json();
+}
+
+async function loadMovies() {
+  if (!HAS_KEY) {
+    notice("TMDB API key not set. Showing sample movies. Open config.js and paste your key.");
+    state.movies = SAMPLE_MOVIES; state.nowShowing = state.movies; return;
+  }
+  try {
+    const d = await tmdb("/movie/now_playing", { region: REGION, page: 1 });
+    state.movies = d.results && d.results.length ? d.results : (await tmdb("/movie/popular", { page: 1 })).results;
+  } catch (e) {
+    notice("Could not load movies (" + e.message + "). Check your API key and internet. Showing sample movies.");
+    state.movies = SAMPLE_MOVIES;
+  }
+  state.nowShowing = state.movies;
+}
+
+/* ---------- helpers ---------- */
+function haversine(a, b, c, d) {
+  const R = 6371, r = x => x * Math.PI / 180;
+  const dLat = r(c - a), dLon = r(d - b);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+/* Real cinemas come from OpenStreetMap. The sample list is used only if that request fails. */
+function allTheatres() {
+  if (state.realTheatres.length) return state.realTheatres;
+  return state.theatreStatus === "error" ? THEATRES : [];
+}
+function sortedTheatres() {
+  const rv = store.get("mtb_treviews", {});
+  const arr = allTheatres().map(t => {
+    const r = rv[t.id] || [];
+    const sum = r.reduce((s, x) => s + x.rating, 0);
+    const avg = t.rating != null ? (t.rating * 5 + sum) / (5 + r.length) : (r.length ? sum / r.length : null);
+    return Object.assign({}, t, { reviews: r, avg,
+      dist: state.loc ? haversine(state.loc.lat, state.loc.lng, t.lat, t.lng) : null });
+  });
+  if (state.loc) arr.sort((a, b) => a.dist - b.dist);
+  return arr;
+}
+function ratingText(t) { return t.avg == null ? "No ratings yet" : "⭐ " + t.avg.toFixed(1); }
+
+// Free public OpenStreetMap servers. If one is slow or busy, the next one is tried.
+const OVERPASS_SERVERS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+];
+async function overpass(ql) {
+  let lastErr = new Error("no map server answered");
+  for (const url of OVERPASS_SERVERS) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 15000);      // give each server 15 seconds
+    try {
+      const r = await fetch(url, { method: "POST", signal: ctl.signal,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "data=" + encodeURIComponent(ql) });
+      if (!r.ok) throw new Error("map server said " + r.status);
+      return await r.json();
+    } catch (e) {
+      lastErr = e.name === "AbortError" ? new Error("map server took too long") : e;
+    } finally { clearTimeout(timer); }
+  }
+  throw lastErr;
+}
+async function fetchCinemas(lat, lng, radiusKm) {
+  const dLat = radiusKm / 111, dLng = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
+  const ql = `[out:json][timeout:20];nwr["amenity"="cinema"](${lat - dLat},${lng - dLng},${lat + dLat},${lng + dLng});out center 60;`;
+  const j = await overpass(ql);
+  const seen = new Set(), out = [];
+  for (const el of j.elements || []) {
+    const t = el.tags || {};
+    const name = (t.name || "").trim();
+    const la = el.lat != null ? el.lat : (el.center && el.center.lat);
+    const lo = el.lon != null ? el.lon : (el.center && el.center.lon);
+    if (!name || la == null || lo == null) continue;
+    if (haversine(lat, lng, la, lo) > radiusKm) continue;     // the box is square; keep only the round area
+    const k = name.toLowerCase() + "|" + la.toFixed(3) + "|" + lo.toFixed(3);
+    if (seen.has(k)) continue; seen.add(k);
+    const addr = [t["addr:housenumber"], t["addr:street"], t["addr:suburb"], t["addr:city"]].filter(Boolean).join(", ");
+    out.push({ id: "osm-" + el.type + "-" + el.id, name, city: addr || t["addr:city"] || "", lat: la, lng: lo,
+      website: t.website || t["contact:website"] || "", real: true });
+  }
+  return out;
+}
+async function loadTheatres() {
+  if (!state.loc) return;
+  state.theatreStatus = "loading"; state.realTheatres = []; render();
+  try {
+    let list = await fetchCinemas(state.loc.lat, state.loc.lng, 15);
+    if (!list.length) list = await fetchCinemas(state.loc.lat, state.loc.lng, 40);
+    state.realTheatres = list; state.theatreStatus = list.length ? "ok" : "empty";
+  } catch (e) {
+    state.theatreStatus = "error";
+    notice("Could not load real cinemas (" + e.message + "). Showing sample theatres instead. Check your internet and try again.");
+  }
+  render();
+}
+function localISO(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function nextDates() {
+  const a = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(); d.setDate(d.getDate() + i);
+    a.push({ val: localISO(d), label: d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }) });
+  }
+  return a;
+}
+function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function bookedSeats(key) {
+  const set = new Set();
+  ROWS.forEach(r => { for (let i = 1; i <= COLS; i++) { const id = r + i; if (hash(key + id) % 100 < 22) set.add(id); } });
+  store.get("mtb_bookings", []).filter(b => b.key === key).forEach(b => b.seats.forEach(s => set.add(s)));
+  return set;
+}
+function showModal(html) {
+  $("#modalBox").innerHTML = '<button class="x" id="closeM">✕</button>' + html;
+  $("#modal").classList.remove("hidden");
+  $("#closeM").onclick = closeModal;
+}
+function closeModal() { $("#modal").classList.add("hidden"); $("#modalBox").innerHTML = ""; }
+function pick(sel, attr, cb) {
+  document.querySelectorAll(sel).forEach(b => b.onclick = () => {
+    document.querySelectorAll(sel).forEach(x => x.classList.remove("sel"));
+    b.classList.add("sel"); cb(b.dataset[attr]);
+  });
+}
+
+/* ---------- location ---------- */
+function updateLocChip() { $("#locChip").textContent = state.loc ? "📍 Location on" : "📍 Use my location"; }
+function askLocation() {
+  if (!navigator.geolocation) { notice("This browser does not support location."); return; }
+  $("#locChip").textContent = "📍 Locating…";
+  navigator.geolocation.getCurrentPosition(
+    p => { state.loc = { lat: p.coords.latitude, lng: p.coords.longitude }; updateLocChip(); loadTheatres(); },
+    () => { updateLocChip(); notice("Location permission was denied or is unavailable. Theatres are shown without distance."); },
+    { timeout: 10000 }
+  );
+}
+
+/* ---------- render ---------- */
+function render() {
+  const logged = !!state.user;
+  $("#nav").classList.toggle("hidden", !logged);
+  $("#userChip").classList.toggle("hidden", !logged);
+  $("#logoutBtn").classList.toggle("hidden", !logged);
+  if (logged) $("#userChip").textContent = "📱 +91 " + state.user.phone;
+  document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === state.tab));
+  if (!logged) return renderLogin();
+  if (state.tab === "movies") return renderMovies();
+  if (state.tab === "theatres") return renderTheatres();
+  return renderBookings();
+}
+
+/* ---------- login with OTP (demo) ---------- */
+function renderLogin() {
+  $("#app").innerHTML = `<section class="login"><h2 style="margin-top:0">Login</h2>
+    <p class="muted">Enter your mobile number to get an OTP.</p>
+    <div id="step1"><div class="row"><span class="prefix">+91</span><input id="phone" inputmode="numeric" maxlength="10" placeholder="10-digit mobile number"></div>
+      <button class="primary" id="sendOtp">Send OTP</button></div>
+    <div id="step2" class="hidden"><div class="demo" id="demoOtp"></div>
+      <input id="otp" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit OTP">
+      <button class="primary" id="verifyOtp">Verify and login</button>
+      <button class="ghost" id="changeNum" style="margin-top:12px">Change number</button></div>
+    <p class="err" id="loginMsg"></p></section>`;
+  let otp = null, tries = 0, phone = "";
+  const msg = t => $("#loginMsg").textContent = t;
+  $("#sendOtp").onclick = () => {
+    phone = $("#phone").value.trim();
+    if (!/^[6-9]\d{9}$/.test(phone)) { msg("Enter a valid 10-digit mobile number."); return; }
+    otp = String(Math.floor(100000 + Math.random() * 900000)); tries = 0; msg("");
+    $("#step1").classList.add("hidden"); $("#step2").classList.remove("hidden");
+    $("#demoOtp").textContent = "Demo mode: no SMS is sent. Your OTP is " + otp + ". A real backend (for example Firebase) will send it by SMS.";
+  };
+  $("#changeNum").onclick = () => { otp = null; msg(""); $("#step2").classList.add("hidden"); $("#step1").classList.remove("hidden"); };
+  $("#verifyOtp").onclick = () => {
+    const v = $("#otp").value.trim();
+    if (otp && v === otp) {
+      state.user = { phone }; store.set("mtb_user", state.user); state.tab = "movies"; render();
+    } else {
+      tries++;
+      if (tries >= 3) { otp = null; msg("Too many wrong attempts. Tap Change number and request a new OTP."); }
+      else msg("Wrong OTP. Try again (" + (3 - tries) + " left).");
+    }
+  };
+}
+
+/* ---------- movies ---------- */
+function headingText() { return HAS_KEY && state.query ? "Results for “" + state.query + "”" : "Now showing"; }
+function renderMovies() {
+  $("#app").innerHTML = `<div class="bar"><h2 id="heading">${esc(headingText())}</h2><input id="search" placeholder="Search any movie…" value="${esc(state.query)}"></div><div class="grid" id="grid"></div>`;
+  $("#search").oninput = onSearch;
+  drawGrid();
+}
+let searchTimer = null, searchSeq = 0;
+function onSearch(e) {
+  state.query = e.target.value.trim();
+  clearTimeout(searchTimer);
+  const seq = ++searchSeq;
+  if (!HAS_KEY) { drawGrid(); return; }              // no key: filter the sample movies locally
+  if (!state.query) {                                  // empty box: back to the now-showing list
+    state.movies = state.nowShowing; $("#heading").textContent = headingText(); drawGrid(); return;
+  }
+  searchTimer = setTimeout(async () => {               // wait until the user stops typing
+    $("#grid").innerHTML = `<p class="muted">Searching…</p>`;
+    try {
+      const d = await tmdb("/search/movie", { query: state.query, include_adult: "false", page: 1 });
+      if (seq !== searchSeq) return;                   // a newer search replaced this one
+      state.movies = d.results || [];
+      $("#heading").textContent = headingText();
+      drawGrid();
+    } catch (err) {
+      if (seq !== searchSeq) return;
+      $("#grid").innerHTML = `<p class="muted">Search failed (${esc(err.message)}). Check your internet and API key.</p>`;
+    }
+  }, 400);
+}
+function drawGrid() {
+  // With a key, state.movies already holds TMDB's results; without one we filter the samples by title.
+  const list = HAS_KEY ? state.movies : state.movies.filter(m => (m.title || "").toLowerCase().includes(state.query.toLowerCase()));
+  $("#grid").innerHTML = list.map(m => `<article class="card" data-id="${m.id}">
+    ${m.poster_path ? `<img loading="lazy" src="${IMG}w342${m.poster_path}" alt="${esc(m.title)}">` : `<div class="noimg">🎬</div>`}
+    <div class="cinfo"><b>${esc(m.title)}</b><span class="muted">⭐ ${(m.vote_average || 0).toFixed(1)} · ${esc((m.release_date || "").slice(0, 4))}</span></div></article>`).join("")
+    || `<p class="muted">No movies found.</p>`;
+  document.querySelectorAll(".card").forEach(c => c.onclick = () => openMovie(parseInt(c.dataset.id, 10)));
+}
+
+async function openMovie(id) {
+  const base = state.movies.find(x => x.id === id) || {};
+  showModal(`<p class="muted">Loading…</p>`);
+  let d = base;
+  if (HAS_KEY && id > 0) {
+    try { d = await tmdb("/movie/" + id, { append_to_response: "videos,reviews,credits" }); }
+    catch (e) { notice("Could not load details: " + e.message); }
+  }
+  if ($("#modal").classList.contains("hidden")) return;
+  const vids = (d.videos && d.videos.results) || [];
+  const tr = vids.find(v => v.site === "YouTube" && v.type === "Trailer") || vids.find(v => v.site === "YouTube");
+  const cast = ((d.credits && d.credits.cast) || []).slice(0, 8).map(c => esc(c.name)).join(", ");
+  const trev = ((d.reviews && d.reviews.results) || []).slice(0, 3);
+  const genres = (d.genres || []).map(g => esc(g.name)).join(", ");
+  const urev = () => store.get("mtb_mreviews", {})[id] || [];
+  const revHTML = () => urev().map(r => `<div class="rev"><b>${esc(r.user)}</b> · ⭐ ${r.rating}/5<br>${esc(r.text)}</div>`).join("") || `<p class="muted">No reviews from app users yet.</p>`;
+  showModal(`<div class="detail">
+      ${d.poster_path ? `<img src="${IMG}w342${d.poster_path}" alt="">` : ""}
+      <div class="txt"><h2 style="margin-top:0">${esc(d.title)}</h2>
+        <p class="muted">⭐ ${(d.vote_average || 0).toFixed(1)} · ${esc((d.release_date || "").slice(0, 4))}${d.runtime ? " · " + d.runtime + " min" : ""}${genres ? " · " + genres : ""}</p>
+        <p>${esc(d.overview || "No description available.")}</p>
+        ${cast ? `<p><b>Cast:</b> ${cast}</p>` : ""}
+        <button class="primary" id="bookBtn">Book tickets</button></div></div>
+    <h3>Trailer</h3>
+    ${tr ? `<iframe src="https://www.youtube.com/embed/${esc(tr.key)}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      <p><a style="color:var(--accent)" target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=${esc(tr.key)}">Open trailer on YouTube</a></p>` : `<p class="muted">No trailer available.</p>`}
+    <h3>Reviews from TMDB</h3>
+    ${trev.map(r => `<div class="rev"><b>${esc(r.author)}</b>${r.author_details && r.author_details.rating ? " · ⭐ " + r.author_details.rating + "/10" : ""}<br>${esc((r.content || "").slice(0, 300))}${(r.content || "").length > 300 ? "…" : ""}</div>`).join("") || `<p class="muted">No TMDB reviews.</p>`}
+    <h3>Reviews from app users</h3><div id="urevs">${revHTML()}</div>
+    <h4>Write a review</h4>
+    <select id="rrate"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Bad</option></select>
+    <textarea id="rtext" placeholder="Your review…" style="margin-top:8px"></textarea>
+    <button class="primary" id="addRev">Submit review</button>`);
+  $("#bookBtn").onclick = () => startBooking(d);
+  $("#addRev").onclick = () => {
+    const text = $("#rtext").value.trim(); if (!text) return;
+    const all = store.get("mtb_mreviews", {});
+    all[id] = (all[id] || []).concat([{ user: "+91 " + state.user.phone.slice(0, 2) + "XXXXXX" + state.user.phone.slice(-2), rating: parseInt($("#rrate").value, 10), text }]);
+    store.set("mtb_mreviews", all); $("#urevs").innerHTML = revHTML(); $("#rtext").value = "";
+  };
+}
+
+/* ---------- booking flow ---------- */
+function startBooking(m) {
+  state.b = { movie: { id: m.id, title: m.title, poster: m.poster_path }, theatreId: null, date: null, time: null, seats: [] };
+  bookingStep1();
+}
+function bookingStep1() {
+  const b = state.b, th = sortedTheatres(), dates = nextDates();
+  showModal(`<h2 style="margin-top:0">Book: ${esc(b.movie.title)}</h2>
+    <h4>1. Choose theatre ${state.loc ? "(nearest first)" : ""}</h4>
+    ${th.length ? `<div class="opts">${th.map(t => `<button class="opt" data-th="${esc(t.id)}"><b>${esc(t.name)}</b><br><small class="muted">${esc(t.city)}${t.dist != null ? " · " + t.dist.toFixed(1) + " km" : ""} · ${ratingText(t)}</small></button>`).join("")}</div>`
+      : `<p class="muted">No cinemas loaded yet. Close this window, tap 📍 at the top to allow your location, wait for the cinemas to load, then try booking again.</p>`}
+    <h4>2. Date</h4><div class="chips">${dates.map(d => `<button class="chipb dbtn" data-d="${d.val}">${esc(d.label)}</button>`).join("")}</div>
+    <h4>3. Showtime</h4><div class="chips">${SHOWTIMES.map(t => `<button class="chipb tbtn" data-t="${t}">${t}</button>`).join("")}</div>
+    <button class="primary" id="toSeats">Select seats →</button><p class="err" id="bErr"></p>`);
+  pick(".opt", "th", v => b.theatreId = v);
+  pick(".dbtn", "d", v => b.date = v);
+  pick(".tbtn", "t", v => b.time = v);
+  $("#toSeats").onclick = () => {
+    if (!b.theatreId || !b.date || !b.time) { $("#bErr").textContent = "Please choose a theatre, a date and a showtime."; return; }
+    bookingStep2();
+  };
+}
+function bookingStep2() {
+  const b = state.b, t = allTheatres().find(x => x.id === b.theatreId);
+  const key = [b.movie.id, b.theatreId, b.date, b.time].join("|");
+  const booked = bookedSeats(key);
+  b.seats = [];
+  showModal(`<h2 style="margin-top:0">${esc(b.movie.title)}</h2>
+    <p class="muted">${esc(t.name)} · ${b.date} · ${b.time}</p>
+    <div class="screen">SCREEN THIS WAY</div>
+    <div class="seats">${ROWS.map(r => `<div class="srow"><span class="rl">${r}</span>${Array.from({ length: COLS }, (_, i) => {
+      const id = r + (i + 1);
+      return `<button class="seat ${booked.has(id) ? "booked" : ""}" data-s="${id}" ${booked.has(id) ? "disabled" : ""}>${i + 1}</button>`;
+    }).join("")}</div>`).join("")}</div>
+    <div class="legend"><span>🟩 Available</span><span>🟥 Selected</span><span>⬛ Booked</span><span>Rows A-C ₹150 · D-F ₹200 · G-H ₹300</span></div>
+    <p id="sum" class="muted">No seats selected</p>
+    <button class="ghost" id="back">← Back</button> <button class="primary" id="pay" disabled>Confirm booking</button>`);
+  const update = () => {
+    const total = b.seats.reduce((s, x) => s + PRICE[x[0]], 0);
+    $("#sum").textContent = b.seats.length ? "Seats: " + b.seats.join(", ") + " · Total ₹" + total : "No seats selected";
+    $("#pay").disabled = !b.seats.length;
+  };
+  document.querySelectorAll(".seat:not(.booked)").forEach(s => s.onclick = () => {
+    const id = s.dataset.s, i = b.seats.indexOf(id);
+    if (i >= 0) { b.seats.splice(i, 1); s.classList.remove("sel"); }
+    else if (b.seats.length < 8) { b.seats.push(id); s.classList.add("sel"); }
+    update();
+  });
+  $("#back").onclick = bookingStep1;
+  $("#pay").onclick = () => {
+    const total = b.seats.reduce((s, x) => s + PRICE[x[0]], 0);
+    const bk = { id: "MTB" + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 90 + 10), key,
+      movieId: b.movie.id, title: b.movie.title, poster: b.movie.poster, theatre: t.name, date: b.date, time: b.time,
+      seats: b.seats.slice().sort(), total, phone: state.user.phone };
+    store.set("mtb_bookings", store.get("mtb_bookings", []).concat([bk]));
+    showModal(`<h2 style="margin-top:0">✅ Booking confirmed</h2>
+      <div class="ticket"><b>${esc(bk.title)}</b><br>${esc(bk.theatre)}<br>${bk.date} · ${bk.time}<br>Seats: ${bk.seats.join(", ")}<br>Total paid: ₹${bk.total} (demo, no real payment)<br>Booking ID: <b>${bk.id}</b></div>
+      <button class="primary" id="done">Done</button>`);
+    $("#done").onclick = () => { closeModal(); state.tab = "bookings"; render(); };
+  };
+}
+
+/* ---------- bookings tab ---------- */
+function renderBookings() {
+  const list = store.get("mtb_bookings", []).filter(b => b.phone === state.user.phone).reverse();
+  $("#app").innerHTML = `<h2>My bookings</h2><div class="list">${list.map(b => `<div class="item"><div><b>${esc(b.title)}</b><br>
+    <span class="muted">${esc(b.theatre)} · ${b.date} · ${b.time}<br>Seats: ${b.seats.join(", ")} · ₹${b.total}<br>ID: ${b.id}</span></div>
+    <button class="ghost cancel" data-id="${b.id}">Cancel</button></div>`).join("") || `<p class="muted">No bookings yet. Pick a movie to book your first ticket.</p>`}</div>`;
+  document.querySelectorAll(".cancel").forEach(c => c.onclick = () => {
+    if (!confirm("Cancel this booking?")) return;
+    store.set("mtb_bookings", store.get("mtb_bookings", []).filter(b => b.id !== c.dataset.id)); renderBookings();
+  });
+}
+
+/* ---------- theatres tab ---------- */
+function renderTheatres() {
+  const th = sortedTheatres(), s = state.theatreStatus;
+  let body;
+  if (!state.loc) {
+    body = `<p class="muted">Allow your location to find real cinemas near you.</p><button class="primary" id="findBtn">📍 Find cinemas near me</button>`;
+  } else if (s === "loading") {
+    body = `<p class="muted">Finding cinemas near you… this can take up to a minute.</p>`;
+  } else if (s === "empty") {
+    body = `<p class="muted">No cinemas found within 40 km on OpenStreetMap. The map data may be incomplete in your area.</p>`;
+  } else {
+    body = `<div class="list">${th.map(t => `<div class="item"><div><b>${esc(t.name)}</b><br><span class="muted">${esc(t.city)}${t.dist != null ? (t.city ? " · " : "") + t.dist.toFixed(1) + " km away" : ""} · ${ratingText(t)} (${t.reviews.length} reviews)</span></div>
+      <div class="chips"><button class="ghost tbtnr" data-id="${esc(t.id)}">Reviews</button>
+      <a class="ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${t.lat}&mlon=${t.lng}#map=17/${t.lat}/${t.lng}">Map</a></div></div>`).join("")}</div>
+      <p class="muted" style="font-size:12px;margin-top:16px">${state.realTheatres.length ? "Cinema data © OpenStreetMap contributors." : "Sample theatres shown because the real search failed."}</p>`;
+  }
+  if (state.loc && (s === "error" || s === "empty")) body += `<button class="ghost" id="retryBtn" style="margin-top:12px">Try again</button>`;
+  $("#app").innerHTML = `<div class="bar"><h2>Theatres ${state.loc ? "near you" : ""}</h2></div>${body}`;
+  if ($("#findBtn")) $("#findBtn").onclick = askLocation;
+  if ($("#retryBtn")) $("#retryBtn").onclick = loadTheatres;
+  document.querySelectorAll(".tbtnr").forEach(b => b.onclick = () => openTheatre(b.dataset.id));
+}
+function openTheatre(id) {
+  const t = sortedTheatres().find(x => x.id === id);
+  const draw = () => {
+    const rv = (store.get("mtb_treviews", {})[id] || []);
+    return rv.map(r => `<div class="rev"><b>${esc(r.user)}</b> · ⭐ ${r.rating}/5<br>${esc(r.text)}</div>`).join("") || `<p class="muted">No reviews yet. Be the first.</p>`;
+  };
+  showModal(`<h2 style="margin-top:0">${esc(t.name)}</h2><p class="muted">${esc(t.city)}${t.city ? " · " : ""}${ratingText(t)}</p>
+    <h3>Reviews</h3><div id="trevs">${draw()}</div><h4>Write a review</h4>
+    <select id="trate"><option value="5">5 - Excellent</option><option value="4">4 - Good</option><option value="3">3 - Average</option><option value="2">2 - Poor</option><option value="1">1 - Bad</option></select>
+    <textarea id="ttext" placeholder="Seats, sound, parking, food…" style="margin-top:8px"></textarea>
+    <button class="primary" id="addTRev">Submit review</button>`);
+  $("#addTRev").onclick = () => {
+    const text = $("#ttext").value.trim(); if (!text) return;
+    const all = store.get("mtb_treviews", {});
+    all[id] = (all[id] || []).concat([{ user: "+91 " + state.user.phone.slice(0, 2) + "XXXXXX" + state.user.phone.slice(-2), rating: parseInt($("#trate").value, 10), text }]);
+    store.set("mtb_treviews", all); $("#trevs").innerHTML = draw(); $("#ttext").value = "";
+    if (state.tab === "theatres") renderTheatres();
+  };
+}
+
+/* ---------- start ---------- */
+$("#nav").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.tab = b.dataset.tab; render(); });
+$("#logoutBtn").onclick = () => { state.user = null; store.set("mtb_user", null); render(); };
+$("#locChip").onclick = askLocation;
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+(async () => {
+  updateLocChip(); render();
+  await loadMovies();
+  if (state.user && state.tab === "movies") render();
+})();
+</script>
+</body>
+</html>
